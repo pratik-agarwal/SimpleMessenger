@@ -1,10 +1,13 @@
 package edu.buffalo.cse.cse486586.simplemessenger;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import edu.buffalo.cse.cse486586.simplemessenger.R;
@@ -30,8 +33,7 @@ import android.widget.TextView;
  * 
  * Please also take look at how this Activity is declared as the main Activity in
  * AndroidManifest.xml file in the root of the project directory (that is, using an intent filter).
- * 
- * @author stevko
+ *
  *
  */
 public class SimpleMessengerActivity extends Activity {
@@ -142,8 +144,7 @@ public class SimpleMessengerActivity extends Activity {
      * 
      * Please make sure you understand how AsyncTask works by reading
      * http://developer.android.com/reference/android/os/AsyncTask.html
-     * 
-     * @author stevko
+     *
      *
      */
     private class ServerTask extends AsyncTask<ServerSocket, String, Void> {
@@ -151,12 +152,25 @@ public class SimpleMessengerActivity extends Activity {
         @Override
         protected Void doInBackground(ServerSocket... sockets) {
             ServerSocket serverSocket = sockets[0];
-            
             /*
              * TODO: Fill in your server code that receives messages and passes them
              * to onProgressUpdate().
              */
-            return null;
+            //Reference: http://www.tutorialspoint.com/java/java_networking.htm
+            try {
+                while(true) {
+                    Socket socket = serverSocket.accept();
+                    DataInputStream dis = new DataInputStream(socket.getInputStream());
+                    //System.out.println(dis.readUTF());
+                    publishProgress(dis.readUTF());
+                    socket.close();
+                }
+            }catch (SocketTimeoutException ste) {
+                Log.e(TAG,"Socket Timeout Exception");
+            }catch (IOException ioe) {
+                Log.e(TAG,"I/O Exception");
+            }
+                return null;
         }
 
         protected void onProgressUpdate(String...strings) {
@@ -196,8 +210,7 @@ public class SimpleMessengerActivity extends Activity {
      * ClientTask is an AsyncTask that should send a string over the network.
      * It is created by ClientTask.executeOnExecutor() call whenever OnKeyListener.onKey() detects
      * an enter key press event.
-     * 
-     * @author stevko
+     *
      *
      */
     private class ClientTask extends AsyncTask<String, Void, Void> {
@@ -216,13 +229,15 @@ public class SimpleMessengerActivity extends Activity {
                 /*
                  * TODO: Fill in your client code that sends out a message.
                  */
+                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                //socket.getOutputStream().write(msgToSend.getBytes("UTF-8"));
+                dos.writeUTF(msgToSend);
                 socket.close();
             } catch (UnknownHostException e) {
                 Log.e(TAG, "ClientTask UnknownHostException");
             } catch (IOException e) {
                 Log.e(TAG, "ClientTask socket IOException");
             }
-
             return null;
         }
     }
