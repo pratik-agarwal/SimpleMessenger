@@ -1,4 +1,4 @@
-SimpleMessenger
+Simple Messenger
 =====================
 
 This is a simple messenger app on Android.
